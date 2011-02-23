@@ -1,0 +1,17 @@
+ntrace is a tool that allows one to capture the running behavior of a process
+as that behavior relates to netowrk activity. This is very much like what you
+can do with strace (by a much different approach, however).
+
+So then, why not just use strace with '-e trace=network'? The reason is that
+strace does not understand the context of the executing process outside of 
+the system call interface. For instance, one is free to read from an open 
+socket with either of the following calls: read or recv. However, strace will
+only capture (with trace=network) the recv version since the context is 
+attached to the socket not the call.
+
+ntrace works by injecting a shared library shim (via LD_PRELOAD) and 
+intercepting calls to particular functions. By managing what the process is
+doing with the socket interface ntrace is able to determine what calls are
+related to network activity and process only those details.
+
+ntrace will follow child processes.
