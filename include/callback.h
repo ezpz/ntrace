@@ -6,6 +6,9 @@
 #ifndef NTRACE_CALLBACK__H__
 #define NTRACE_CALLBACK__H__
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/uio.h>
 #include <ntrace.h>
 
 /*

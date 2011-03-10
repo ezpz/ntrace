@@ -15,3 +15,9 @@ doing with the socket interface ntrace is able to determine what calls are
 related to network activity and process only those details.
 
 ntrace will follow child processes.
+
+
+NOTE:
+This code builds on Debian (Lenny) 2.6.26-2-amd64. I have not tested on
+other systems.
+
