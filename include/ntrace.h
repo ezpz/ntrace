@@ -19,6 +19,7 @@
 #define MARSHAL_FILE    "/tmp/.%d.state" /**< proc_t marshalled data file */
 #define MARSHAL_FMT     "%d %d %" PRIu64 ",%" \
                         PRIu64 " %s\n" /**< marshalled output fmt */
+#define CALL_HEADER     "#call,fd,pid,time,size,total_read,total_written\n"
 
 typedef int key_t; /**< type used to index the flows array in a proc_t */
 

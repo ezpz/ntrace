@@ -356,7 +356,7 @@ int cb_close (proc_t * p, int res, int fd) {
 
 void cb__exit (proc_t * p, int code) {
 
-    TRACE (p, "exit (%d) = ...\n", code);
+    TRACE (p, "_exit (%d) = ...\n", code);
 
     do_cleanup (p);
 }

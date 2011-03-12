@@ -96,7 +96,11 @@ proc_t * load_proc (const char * file) {
  */
 void exit_fun () {
     TRACE (_state, " [atexit] \n");
-    _exit (0);
+    /*
+     * It is ok if this is called again when _exit is invoked, a flag is 
+     * set to ensure that the process is only dumped once
+     */
+    do_cleanup (_state);
 }
 
 
@@ -361,6 +365,9 @@ void do_initialize (proc_t * p) {
         snprintf (logfile, FNAME_SIZE, "/tmp/call.%d.log", p->pid);
         p->log = fopen (logfile, "w");
     }
+
+    fprintf (p->log, CALL_HEADER);
+    fflush (p->log);
 
     if (trace) {
         p->trace = fopen (trace, "a");
