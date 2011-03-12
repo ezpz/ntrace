@@ -11,6 +11,7 @@
 
 #define CALL_LOG(p,f...) do {\
     fprintf (p->log,f);\
+    fflush (p->log);\
 } while (0);
 
 #define TRACE(p,f...) do {\
