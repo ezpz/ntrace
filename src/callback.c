@@ -349,6 +349,12 @@ int cb_close (proc_t * p, int res, int fd) {
     if (p->log && fd == fileno (p->log))
         return -1;
 
+    /*
+     * (3.12.2011) aptitude update will trigger this situation
+     */
+    if (fd < 0)
+        return res;
+
     release_fd (p, fd);
     return res;
 }
