@@ -16,8 +16,10 @@ related to network activity and process only those details.
 
 ntrace will follow child processes.
 
+For discussion and an example see: http://uu-kk.blogspot.com/2010/12/intercepting-linux-system-calls-part.html
+
 
 NOTE:
 This code builds on Debian (Lenny) 2.6.26-2-amd64. I have not tested on
-other systems.
+other systems but most current linux flavors should be supported. 
 
