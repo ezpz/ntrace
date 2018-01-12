@@ -12,14 +12,12 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define CALL_LOG_FMT    "%s,%d,%d,%lu.%06lu,%ld,%" \
-                        PRIu64 ",%" PRIu64 "\n" /**< log format */
+#define CALL_LOG_FMT    "%s,%d,%d,%lu.%06lu,%ld\n"
 #define FLOWS_MAX       255 /**< 255 fd per PID seems reasonable */
 #define FNAME_SIZE      512 /**< length of file name buffers */
 #define MARSHAL_FILE    "/tmp/.%d.state" /**< proc_t marshalled data file */
-#define MARSHAL_FMT     "%d %d %" PRIu64 ",%" \
-                        PRIu64 " %s\n" /**< marshalled output fmt */
-#define CALL_HEADER     "#call,fd,pid,time,size,total_read,total_written\n"
+#define MARSHAL_FMT     "%d %d %s\n" /**< marshalled output fmt */
+#define CALL_HEADER     "#call,fd,pid,time,size\n"
 
 #define DEFAULT_NTRACE_LOG_FILE     "ntrace-call.log"
 #define DEFAULT_NTRACE_TRACE_FILE   "ntrace.log"
@@ -48,10 +46,7 @@ typedef enum {
     SC_WRITE, SC_SEND, SC_SENDTO, SC_SENDMSG, SC_SENDFILE, 
     SC_SENDFILE64, SC_WRITEV,
 
-    /* loop control and array sizing */
-    SC_ENUM_SIZE,
-    SC_INGRESS_SIZE = SC_RECVMSG + 1 - SC_READ,
-    SC_EGRESS_SIZE = SC_WRITEV + 1 - SC_WRITE
+    SC_ENUM_SIZE
 } call_t;
 
 /**
@@ -63,24 +58,6 @@ typedef struct {
     int     fd;  /**< file descriptor or socket */
     fd_t    type; /**< data association */
     int     active; /**< has this fd been used yet ? */
-
-    /** Counts of how many times each call was used */
-    uint64_t ingress_count[SC_INGRESS_SIZE];
-
-    /** Total bytes read for each supported call */
-    uint64_t ingress_bytes[SC_INGRESS_SIZE];
-
-    /** Overall total inbound bytes for this flow */
-    uint64_t ingress_total;
-
-    /** Counts of how many times each call was used */
-    uint64_t egress_count[SC_EGRESS_SIZE];
-
-    /** Total bytes written for each supported call */
-    uint64_t egress_bytes[SC_EGRESS_SIZE];
-
-    /** Overall total outbound bytes for this flow */
-    uint64_t egress_total;
 
     /** Detials regarding when the flow was established and released */
     struct timeval opened, closed;

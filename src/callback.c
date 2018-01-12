@@ -27,8 +27,7 @@ static const char * family2str (const struct sockaddr * sa) {
 }
 
 /**
- * Behavior common to all ingress/egress calls.
- * Log information and update totals
+ * Log the activity for this action
  * @note If amnt is < 0 it is assumed that the call failed and no logging
  * takes place here
  * @note Only network related calls are processed here
@@ -37,31 +36,18 @@ static const char * family2str (const struct sockaddr * sa) {
  * @param amnt The result of the call itself
  * @param call The actual call this represents
  */
-static void update_and_log (proc_t * p, int fd, ssize_t amnt, call_t call) {
+static void log_call (proc_t * p, int fd, ssize_t amnt, call_t call) {
 
     key_t key = hash_key (p, fd);
     struct timeval tv;
 
-
     if (amnt < 0 || p->flows[key].type != FD_NET)
         return;
-
-    /* < SC_WRITE indicates an inbound direction */
-    if (call < SC_WRITE) {
-        p->flows[key].ingress_count[call] += 1;
-        p->flows[key].ingress_bytes[call] += amnt;
-        p->flows[key].ingress_total += amnt;
-    } else {
-        p->flows[key].egress_count[call - SC_WRITE] += 1;
-        p->flows[key].egress_bytes[call - SC_WRITE] += amnt;
-        p->flows[key].egress_total += amnt;
-    }
 
     gettimeofday (&tv, NULL);
 
     CALL_LOG (p, CALL_LOG_FMT, 
-            call2str (call), fd, p->pid, tv.tv_sec, tv.tv_usec, amnt,
-            p->flows[key].ingress_total, p->flows[key].egress_total);
+            call2str (call), fd, p->pid, tv.tv_sec, tv.tv_usec, amnt);
 }
 
 
@@ -89,7 +75,7 @@ void cb_read (proc_t * p, ssize_t amnt, int fd, void * buf, size_t sz) {
     TRACE (p, "[%4s] read (%d, %p, %zu) = %zd\n", flow2str (&p->flows[key]),
             fd, buf, sz, amnt);
 
-    update_and_log (p, fd, amnt, SC_READ);
+    log_call (p, fd, amnt, SC_READ);
 }
 
 
@@ -100,7 +86,7 @@ void cb_write (proc_t * p, ssize_t amnt, int fd, const void * buf, size_t sz) {
     TRACE (p, "[%4s] write (%d, %p, %zu) = %zd\n", flow2str (&p->flows[key]),
             fd, buf, sz, amnt);
 
-    update_and_log (p, fd, amnt, SC_WRITE);
+    log_call (p, fd, amnt, SC_WRITE);
 }
 
 
@@ -112,7 +98,7 @@ void cb_recv (proc_t * p, ssize_t amnt, int fd, void * buf,
     TRACE (p, "[%4s] recv (%d, %p, %zu, %x) = %zd\n", flow2str (&p->flows[key]),
             fd, buf, sz, flags, amnt);
 
-    update_and_log (p, fd, amnt, SC_RECV);
+    log_call (p, fd, amnt, SC_RECV);
 }
 
 
@@ -124,7 +110,7 @@ void cb_send (proc_t * p, ssize_t amnt, int fd, const void * buf,
     TRACE (p, "[%4s] send (%d, %p, %zu, %x) = %zd\n", flow2str (&p->flows[key]),
             fd, buf, sz, flags, amnt);
 
-    update_and_log (p, fd, amnt, SC_SEND);
+    log_call (p, fd, amnt, SC_SEND);
 }
 
 
@@ -142,7 +128,7 @@ void cb_sendto (proc_t * p, ssize_t amnt, int fd, const void * buf, size_t sz,
             flow2str (&p->flows[key]), fd, buf, sz, flags, len, amnt);
     }
 
-    update_and_log (p, fd, amnt, SC_SENDTO);
+    log_call (p, fd, amnt, SC_SENDTO);
 }
 
 
@@ -161,7 +147,7 @@ void cb_recvfrom (proc_t * p, ssize_t amnt, int fd, void * buf, size_t sz,
             len ? *len : 0, amnt);
     }
 
-    update_and_log (p, fd, amnt, SC_RECVFROM);
+    log_call (p, fd, amnt, SC_RECVFROM);
 }
 
 
@@ -223,7 +209,7 @@ void cb_sendmsg (proc_t * p, ssize_t amnt, int fd,
     TRACE (p, "[%4s] sendmsg (%d, %p, %x) = %zd\n", flow2str (&p->flows[key]),
             fd, msg, flags, amnt);
 
-    update_and_log (p, fd, amnt, SC_SENDMSG);
+    log_call (p, fd, amnt, SC_SENDMSG);
 }
 
 
@@ -235,7 +221,7 @@ void cb_recvmsg (proc_t * p, ssize_t amnt, int fd, struct msghdr * msg,
     TRACE (p, "[%4s] recvmsg (%d, %p, %x) = %zd\n", flow2str (&p->flows[key]),
             fd, msg, flags, amnt);
     
-    update_and_log (p, fd, amnt, SC_RECVMSG);
+    log_call (p, fd, amnt, SC_RECVMSG);
 }
 
 
@@ -297,7 +283,7 @@ void cb___read_chk (proc_t * p, ssize_t amnt, int fd, void * buf, size_t bytes,
      * On some systems, this exists as a 'safe' read. It is transparant to
      * the user that this happens and will remain so here. 
      */
-    update_and_log (p, fd, amnt, SC_READ);
+    log_call (p, fd, amnt, SC_READ);
 }
 
 
@@ -309,7 +295,7 @@ void cb_sendfile64 (proc_t * p, ssize_t amnt, int skt, int fd,
     TRACE (p, "[%4s] sendfile64 (%d, %d, %ld, %zu) = %zd\n", 
             flow2str (&p->flows[key]), skt, fd, off, sz, amnt);
 
-    update_and_log (p, skt, amnt, SC_SENDFILE64);
+    log_call (p, skt, amnt, SC_SENDFILE64);
 }
 
 
@@ -322,7 +308,7 @@ void cb_sendfile (proc_t * p, ssize_t amnt, int skt, int fd,
     TRACE (p, "[%4s] sendfile (%d, %d, %ld, %zu) = %zd\n", 
             flow2str (&p->flows[key]), skt, fd, off, sz, amnt);
 
-    update_and_log (p, skt, amnt, SC_SENDFILE);
+    log_call (p, skt, amnt, SC_SENDFILE);
 }
 
 
@@ -334,7 +320,7 @@ void cb_writev (proc_t * p, ssize_t amnt, int fd,
     TRACE (p, "[%4s] writev (%d, %p, %d) = %zd\n", flow2str (&p->flows[key]),
             fd, io, cnt, amnt);
 
-    update_and_log (p, fd, amnt, SC_WRITEV);
+    log_call (p, fd, amnt, SC_WRITEV);
 }
 
 

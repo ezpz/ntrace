@@ -7,4 +7,4 @@
 - [ ] Fix the hashing nonsense. It is not needed in the current implementation
 - [ ] Make safe calls for any hooked function called by ntrace code
 - [ ] Dynamically add new fds instead of capping at 255
-- [ ] Remove the total\_\* columns in call log
+- [x] Remove the total\_\* columns in call log

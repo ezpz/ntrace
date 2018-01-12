@@ -42,8 +42,6 @@ void save_proc (proc_t * p) {
     for (i = 0; i < FLOWS_MAX; ++i) {
         if (p->flows[i].active) {
             fprintf (out, MARSHAL_FMT, i, p->flows[i].fd, 
-                    p->flows[i].ingress_total,
-                    p->flows[i].egress_total,
                     flow2str (&p->flows[i]));
         }
     }
@@ -65,7 +63,6 @@ proc_t * load_proc (const char * file) {
     proc_t * p = NULL;
     int i = 0, fd = 0;
     char type[FNAME_SIZE] = {0};
-    uint64_t nr = 0, nw = 0;
 
     if (! in)
         return NULL;
@@ -78,10 +75,8 @@ proc_t * load_proc (const char * file) {
         return NULL; 
     }
 
-    while (fscanf (in, MARSHAL_FMT, &i, &fd, &nr, &nw, type) != EOF) {
+    while (fscanf (in, MARSHAL_FMT, &i, &fd, type) != EOF) {
         p->flows[i].fd = fd;
-        p->flows[i].ingress_total = nr;
-        p->flows[i].egress_total = nw;
         if (strncmp (type, "NET", FNAME_SIZE) == 0)
             p->flows[i].type = FD_NET;
         else if (strncmp (type, "PIPE", FNAME_SIZE) == 0)
@@ -168,24 +163,6 @@ const char * flow2str (flow_t * flow) {
     return type2str (flow->type);
 }
 
-
-/**
- * Wipe out the details of a flow
- * @param flow The flow to clean
- */
-void clear_flow (flow_t * flow) {
-    int i = 0;
-    for (; i < SC_INGRESS_SIZE; ++i) {
-        flow->ingress_count[i] = 0;
-        flow->ingress_bytes[i] = 0;
-        flow->ingress_total = 0;
-    }
-    for (i = 0; i < SC_EGRESS_SIZE; ++i) {
-        flow->egress_count[i] = 0;
-        flow->egress_bytes[i] = 0;
-        flow->egress_total = 0;
-    }
-}
 
 /**
  * Stop monitoring the flow of traffic over this fd.
@@ -430,7 +407,6 @@ void do_initialize (proc_t * p) {
          * active in the child.
          */
         for (i = 0; i < FLOWS_MAX; ++i) {
-            clear_flow (&(p->flows[i]));
             if (p->flows[i].active) {
                 key_t key = hash_key (p, p->flows[i].fd);
                 TRACE (p, "  rehash %d (%s)\n", 

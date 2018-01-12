@@ -37,7 +37,6 @@ void        save_proc (proc_t *);
 proc_t      *load_proc (const char *);
 void        exit_fun ();
 void        signal_handler (int);
-void        clear_flow (flow_t *);
 key_t       hash_key (proc_t *, int);
 void        associate_fd (proc_t *, int, fd_t);
 void        release_fd (proc_t *, int);
