@@ -1,0 +1,4 @@
+- [ ] Remove aggregated output code
+- [ ] Change output location to local path
+- [ ] Fix noreturn warning for _exit call
+- [ ] keep state about connections (e.g. socket to IP)
