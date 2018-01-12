@@ -39,7 +39,7 @@ int clone (int (*fn)(void *), void * stk, int flag, void * arg) {
 }
 
 void _exit (int status) {
-    typedef void (*libcall)(int);
+    typedef void (*libcall)(int) __attribute__((noreturn));
     proc_t * p = attach_to_process ();
     cb__exit (p, status);
     libcall fun = dlsym (RTLD_NEXT, "_exit");

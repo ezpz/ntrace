@@ -21,6 +21,10 @@
                         PRIu64 " %s\n" /**< marshalled output fmt */
 #define CALL_HEADER     "#call,fd,pid,time,size,total_read,total_written\n"
 
+#define DEFAULT_NTRACE_LOG_FILE     "ntrace-call.log"
+#define DEFAULT_NTRACE_TRACE_FILE   "ntrace.log"
+
+
 typedef int key_t; /**< type used to index the flows array in a proc_t */
 
 /**

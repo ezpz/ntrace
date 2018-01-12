@@ -361,23 +361,31 @@ void do_initialize (proc_t * p) {
     log = getenv ("NTRACE_LOG_FILE");
     trace = getenv ("NTRACE_TRACE_FILE");
 
-    if (log) {
-        p->log = fopen (log, "a");
-    } else {
-        char logfile[FNAME_SIZE] = {0};
-        snprintf (logfile, FNAME_SIZE, "/tmp/call.%d.log", p->pid);
-        p->log = fopen (logfile, "w");
+    if (NULL == log) {
+        log = DEFAULT_NTRACE_LOG_FILE;
+    }
+
+    p->log = fopen (log, "a");
+    if (NULL == p->log) {
+        /* Failed to open the log for some reason - use stderr */
+        fprintf (stderr, "Error opening '%s' : %s\n", 
+                log, strerror (errno));
+        fprintf (stderr, "Using stderr instead\n");
+        p->log = stderr;
     }
 
     fprintf (p->log, CALL_HEADER);
     fflush (p->log);
 
-    if (trace) {
-        p->trace = fopen (trace, "a");
-    } else {
-        char tracefile[FNAME_SIZE] = {0};
-        snprintf (tracefile, FNAME_SIZE, "/tmp/trace.%d.log", p->pid);
-        p->trace = fopen (tracefile, "w");
+    if (NULL == trace) {
+        trace = DEFAULT_NTRACE_TRACE_FILE;
+    }
+
+    p->trace = fopen (trace, "a");
+    if (NULL == p->trace) {
+        fprintf (stderr, "Error opening '%s' : %s\n", 
+                trace, strerror (errno));
+        fprintf (stderr, "No trace information will be available\n");
     }
 
     /*

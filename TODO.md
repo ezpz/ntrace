@@ -1,4 +1,7 @@
 - [ ] Remove aggregated output code
-- [ ] Change output location to local path
-- [ ] Fix noreturn warning for _exit call
+- [x] Change output location to local path
+- [x] Fix noreturn warning for \_exit call
 - [ ] keep state about connections (e.g. socket to IP)
+- [ ] Automatically get rid of .state files
+- [ ] Determine how to identify an existing log file from prior run
+- [ ] Fix the hashing nonsense. It is not needed in the current implementation
