@@ -17,7 +17,7 @@ LIB_SRCS = $(SRC_DIR)/ntrace.c \
 		   $(SRC_DIR)/util.c
 
 $(LIB_FILE): $(LIB_SRCS)
-	$(GCC) $(MACROS) $(FLAGS) -fPIC -shared -Wl,-soname,$(LIB_FILE) -I$(INC_DIR) -o $@ $(LINK) $^
+	$(GCC) $(MACROS) $(FLAGS) -fPIC -shared -Wl,-soname,$(LIB_FILE) -I$(INC_DIR) -o $@ $^ $(LINK)
 
 clean:
 	rm -f $(LIB_FILE)

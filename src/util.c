@@ -74,7 +74,10 @@ proc_t * load_proc (const char * file) {
     if (! p)
         return NULL;
 
-    fscanf (in, "%d\n", &p->pid);
+    if (1 != fscanf (in, "%d\n", &p->pid)) { 
+        return NULL; 
+    }
+
     while (fscanf (in, MARSHAL_FMT, &i, &fd, &nr, &nw, type) != EOF) {
         p->flows[i].fd = fd;
         p->flows[i].ingress_total = nr;
