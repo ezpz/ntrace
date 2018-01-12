@@ -455,15 +455,11 @@ void do_initialize (proc_t * p) {
 
 
 /**
- * When a process exits, this is the final call to purge data to file
- * before exiting.
+ * When a process exits, this is the final call to clean reseources related
+ * to this process before existing.
  * @param p The process about to be exited
- * @note This is a potentially long operation but it happens as the process
- * exiting so the impact is minimized to operational context.
  */
 void do_cleanup (proc_t * p) {
-
-    fd_t type = FD_NET;
 
     if (p->exited)
         return;
@@ -479,86 +475,6 @@ void do_cleanup (proc_t * p) {
     
     if (! p->log)
         return;
-    /*
-     * Currently, the individual fd activity is elided as it adds a large
-     * amount of noise to the summary output. 
-     * TODO: enable this behavior with command line option
-     */
-
-    CALL_LOG (p, "#---- Summary ----#\n");
-    CALL_LOG (p, "# call : count (bytes)\n");
-    for (; type < FD_ENUM_SIZE; ++type) {
-        int index = 0;
-        uint64_t ingress = 0, egress = 0;
-        uint64_t in_bytes[SC_INGRESS_SIZE] = {0}; 
-        uint64_t in_count[SC_INGRESS_SIZE] = {0};
-        uint64_t out_bytes[SC_EGRESS_SIZE] = {0}; 
-        uint64_t out_count[SC_EGRESS_SIZE] = {0};
-        key_t key = 0;
-
-        /*
-         * For now, skip everything not net related.
-         * Leave the construct in place in case it becomes
-         * necessary to expose this output or the extra details would
-         * be useful.
-         */
-        if (type != FD_NET)
-            continue;
-
-        for (; key < FLOWS_MAX; ++key) {
-            int i = 0; 
-            for (; i < SC_INGRESS_SIZE; ++i) {
-                if (p->flows[key].type == type) {
-                    in_bytes[i] += p->flows[key].ingress_bytes[i];
-                    in_count[i] += p->flows[key].ingress_count[i];
-                    ingress += p->flows[key].ingress_bytes[i];
-                }
-            }
-            for (i = 0; i < SC_EGRESS_SIZE; ++i) {
-                if (p->flows[key].type == type) {
-                    out_bytes[i] += p->flows[key].egress_bytes[i];
-                    out_count[i] += p->flows[key].egress_count[i];
-                    egress += p->flows[key].egress_bytes[i];
-                }
-            }
-        }
-        CALL_LOG (p, "\n");
-        CALL_LOG (p, "%s byte totals: (in:%" PRIu64 ", out:%" PRIu64 ")\n", 
-                type2str (type), ingress, egress);
-        CALL_LOG (p, "       read : %" PRIu64 " (%" PRIu64 ")\n", 
-                in_count[SC_READ], in_bytes[SC_READ]);
-        CALL_LOG (p, "       recv : %" PRIu64 " (%" PRIu64 ")\n", 
-                in_count[SC_RECV], in_bytes[SC_RECV]);
-        CALL_LOG (p, "   recvfrom : %" PRIu64 " (%" PRIu64 ")\n", 
-                in_count[SC_RECVFROM], in_bytes[SC_RECVFROM]);
-        CALL_LOG (p, "    recvmsg : %" PRIu64 " (%" PRIu64 ")\n", 
-                in_count[SC_RECVMSG], in_bytes[SC_RECVMSG]);
-        /*
-         * FIXME: This is horrible. 
-         * Clean up the enum abuse so that these will index properly here
-         */
-        index = SC_WRITE - SC_WRITE;
-        CALL_LOG (p, "      write : %" PRIu64 " (%" PRIu64 ")\n", 
-                out_count[index], out_bytes[index]);
-        index = SC_SEND - SC_WRITE;
-        CALL_LOG (p, "       send : %" PRIu64 " (%" PRIu64 ")\n", 
-                out_count[index], out_bytes[index]);
-        index = SC_SENDTO - SC_WRITE;
-        CALL_LOG (p, "     sendto : %" PRIu64 " (%" PRIu64 ")\n", 
-                out_count[index], out_bytes[index]);
-        index = SC_SENDMSG - SC_WRITE;
-        CALL_LOG (p, "    sendmsg : %" PRIu64 " (%" PRIu64 ")\n", 
-                out_count[index], out_bytes[index]);
-        index = SC_SENDFILE - SC_WRITE;
-        CALL_LOG (p, "   sendfile : %" PRIu64 " (%" PRIu64 ")\n", 
-                out_count[index], out_bytes[index]);
-        index = SC_SENDFILE64 - SC_WRITE;
-        CALL_LOG (p, " sendfile64 : %" PRIu64 " (%" PRIu64 ")\n", 
-                out_count[index], out_bytes[index]);
-        index = SC_WRITEV - SC_WRITE;
-        CALL_LOG (p, "     writev : %" PRIu64 " (%" PRIu64 ")\n", 
-                out_count[index], out_bytes[index]);
-    }
 
     fclose (p->log);
     p->log = NULL;
