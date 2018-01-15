@@ -4,7 +4,8 @@
 - [ ] keep state about connections (e.g. socket to IP)
 - [ ] Automatically get rid of .state files
 - [ ] Determine how to identify an existing log file from prior run
-- [ ] Fix the hashing nonsense. It is not needed in the current implementation
+- [x] Fix the hashing nonsense. It is not needed in the current implementation
 - [ ] Make safe calls for any hooked function called by ntrace code
 - [ ] Dynamically add new fds instead of capping at 255
 - [x] Remove the total\_\* columns in call log
+- [ ] shutdown should close *all* open fds related to that connection

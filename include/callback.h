@@ -41,12 +41,15 @@ void cb_sendfile64  (proc_t *, ssize_t, int, int, off_t, size_t);
 void cb_sendfile    (proc_t *, ssize_t, int, int, off_t, size_t);
 void cb_writev      (proc_t *, ssize_t, int, const struct iovec *, int);
 
+void cb_shutdown    (proc_t *, int, int, int);
+
 /*
  * ntrace does internal bookkeeping for some of the flows (most notably
  * the log files being maintained) so this function returns a modified 
  * result to the caller
  */
 int cb_close        (proc_t *, int, int);
+
 
 /*
  * _exit carries the __noreturn__ attribute which means there is no return

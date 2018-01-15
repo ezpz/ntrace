@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <inttypes.h>
+#include <sys/socket.h>
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -163,6 +164,43 @@ const char * flow2str (flow_t * flow) {
     return type2str (flow->type);
 }
 
+/**
+ * Create a human readable form of a protocol family
+ * @param family The protocol family (see sys/socket.h)
+ * @return Stringified version of the family
+ */
+const char * family2str (int family) {
+    switch (family) {
+        case AF_UNIX: /* AF_LOCAL */ return "AF_UNIX";
+        case AF_INET: return "AF_INET";
+        case AF_INET6: return "AF_INET6";
+        case AF_IPX: return "AF_IPX";
+        case AF_NETLINK: return "AF_NETLINK";
+        case AF_X25: return "AF_X25";
+        case AF_AX25: return "AF_AX25";
+        case AF_ATMPVC: return "AF_ATMPVC";
+        case AF_APPLETALK: return "AF_APPLETALK";
+        case AF_PACKET: return "AF_PACKET";
+        case AF_ALG: return "AF_ALG";
+        default: return "???";
+    }
+    return "FAMILY SWITCH FAIL";
+}
+
+/**
+ * Create a human readable form of a shutdown request
+ * @param how How the socket is being shutdown
+ * @return Stringified version of the request
+ */
+const char * shutdown2str (int how) {
+    switch (how) {
+        case SHUT_RD: return "SHUT_RD";
+        case SHUT_WR: return "SHUT_WR";
+        case SHUT_RDWR: return "SHUT_RDWR";
+        default: return "???";
+    }
+    return "SHUTDOWN SWITCH FAIL";
+}
 
 /**
  * Stop monitoring the flow of traffic over this fd.
@@ -170,8 +208,7 @@ const char * flow2str (flow_t * flow) {
  * @param fd The file descriptor to release
  */
 void release_fd (proc_t * p, int fd) {
-    key_t key = hash_key (p, fd);
-    flow_t * flow = &(p->flows[key]);
+    flow_t * flow = &(p->flows[fd]);
 
     TRACE (p, " Releasing fd %d\n", fd);
     TRACE (p, "  Type  : %s\n", flow2str (flow));
@@ -200,8 +237,7 @@ void release_fd (proc_t * p, int fd) {
  */
 void associate_fd (proc_t * p, int fd, fd_t type) {
 
-    key_t key = hash_key (p, fd);
-    flow_t * flow = &(p->flows[key]);
+    flow_t * flow = &(p->flows[fd]);
 
     /* Alread active and associated; change status and exit */
     if (flow->active) {
@@ -239,19 +275,6 @@ void associate_fd (proc_t * p, int fd, fd_t type) {
 
     TRACE (p, " Created flow: fd => %d, type => %s\n", fd, flow2str (flow));
     save_proc (p);
-}
-
-
-/**
- * Get a key into the flow hash
- * @param p The calling process 
- * @param fd The fd to look up
- * @note When more than FLOWS_MAX flows are allocated this will clobber
- * existing data. 
- */
-key_t hash_key (proc_t * p, int fd) {
-    (void) p; /* unused */
-    return fd % FLOWS_MAX;
 }
 
 
@@ -380,13 +403,9 @@ void do_initialize (proc_t * p) {
 
     /*
      * If this flag is set, a parent's state was used to populate the 
-     * current process state. As such, it is necessary to re-hash all 
-     * of the flows to their respective positions in the flow storage
+     * current process state. As such, it is necessary to re-load all 
+     * of the flows to their respective positions in the new process
      *
-     * NOTE: In the case where hash_key (p, fd) returns fd % X, this is
-     * entirely a waste of time (current implementation). However, it may
-     * be the case that the key becomes a function of the pid and fd in 
-     * which case this will be necessary.
      */
     if (do_reset) {
         
@@ -400,18 +419,15 @@ void do_initialize (proc_t * p) {
             memset (&buff[i], 0, sizeof (flow_t));
 
         /*
-         * While the fds are inherited from the parent, the traffic is *not*
-         * Clear all entries before rehashing
-         *
          * This implicitly assumes that fds active in the parent are
          * active in the child.
          */
         for (i = 0; i < FLOWS_MAX; ++i) {
             if (p->flows[i].active) {
-                key_t key = hash_key (p, p->flows[i].fd);
+                int fd = p->flows[i].fd;
                 TRACE (p, "  rehash %d (%s)\n", 
                         p->flows[i].fd, flow2str (&(p->flows[i])));
-                memcpy (&buff[key], &(p->flows[i]), sizeof (flow_t));
+                memcpy (&buff[fd], &(p->flows[i]), sizeof (flow_t));
             }
         }
 

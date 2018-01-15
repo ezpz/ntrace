@@ -126,6 +126,16 @@ int socket (int domain, int type, int protocol) {
     return new_fd;
 }
 
+int shutdown (int sockfd, int how) {
+    typedef int (*libcall)(int,int);
+    int res = 0;
+    proc_t * p = attach_to_process ();
+    libcall fun = dlsym (RTLD_NEXT, "shutdown");
+    res = fun (sockfd, how);
+    cb_shutdown (p, res, sockfd, how);
+    return res;
+}
+
 int close (int fd) {
     typedef int (*libcall)(int);
     int ret = 0;

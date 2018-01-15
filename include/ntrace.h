@@ -23,8 +23,6 @@
 #define DEFAULT_NTRACE_TRACE_FILE   "ntrace.log"
 
 
-typedef int key_t; /**< type used to index the flows array in a proc_t */
-
 /**
  * @enum fd_t
  * All ways that a file descriptor can be represented

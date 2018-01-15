@@ -37,11 +37,12 @@ void        save_proc (proc_t *);
 proc_t      *load_proc (const char *);
 void        exit_fun ();
 void        signal_handler (int);
-key_t       hash_key (proc_t *, int);
 void        associate_fd (proc_t *, int, fd_t);
 void        release_fd (proc_t *, int);
 const char  *call2str (call_t);
 const char  *type2str (fd_t);
 const char  *flow2str (flow_t *);
+const char  *family2str (int);
+const char  *shutdown2str (int);
 
 #endif /*NTRACE_UTIL__H__*/
